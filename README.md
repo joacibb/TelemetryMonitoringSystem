@@ -41,7 +41,7 @@ Click the "Enviar por UDP" button to send simulated UDP telemetry data to the se
 
 # Screenshots
 
-![alt text]([https://imgur.com/a/1U6GQZ2](https://i.imgur.com/9J8hEDn.png))
+![alt text](https://imgur.com/a/1U6GQZ2)
 
 # Contributing
 
