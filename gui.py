@@ -1,3 +1,4 @@
+import threading
 import tkinter as tk
 import socket
 import json
@@ -24,6 +25,21 @@ def save_to_csv(telemetry_data):
         csv_writer.writerow([telemetry_data["time"], telemetry_data["temperature"], telemetry_data["humidity"]])
 
 
+def check_server_status():
+    server_address = "127.0.0.1"  # Cambia esta dirección IP por la del servidor
+    server_port = 12345  # Cambia este puerto por el del servidor
+
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.settimeout(1)
+
+    try:
+        sock.connect((server_address, server_port))
+        sock.close()
+        return "Online"
+    except socket.error:
+        return "Offline"
+
+
 class TelemetryApp:
     def __init__(self, root):
         self.root = root
@@ -35,6 +51,9 @@ class TelemetryApp:
 
         self.udp_button = tk.Button(root, text="Enviar por UDP", command=self.send_udp)
         self.udp_button.pack()
+
+        self.status_label = tk.Label(root, text="Estado: Desconectado", font=("Helvetica", 12))
+        self.status_label.pack()
 
         self.telemetry_label = tk.Label(root, text="", font=("Helvetica", 12))
         self.telemetry_label.pack()
@@ -52,6 +71,20 @@ class TelemetryApp:
         self.canvas.get_tk_widget().pack()
 
         self.ani = FuncAnimation(self.fig, self.update_graph, interval=1000, save_count=10)
+
+        self.server_check_thread = threading.Thread(target=self.check_server_status_periodically)
+        self.server_check_thread.daemon = True
+        self.server_check_thread.start()
+
+    def update_server_status(self):
+        status = check_server_status()
+        self.status_label.config(text=f"Estado: {status}")
+
+    def check_server_status_periodically(self):
+        while True:
+            self.update_server_status()
+            # Espera 5 segundos antes de la próxima verificación
+            threading.Event().wait(5)
 
     def update_graph(self, frame):
         self.line.set_xdata(self.time_data)
@@ -79,9 +112,14 @@ class TelemetryApp:
 
             save_to_csv(telemetry_data)
 
+    def update_server_status(self):
+        status = check_server_status()
+        self.status_label.config(text=f"Estado: {status}")
+
 
 if __name__ == "__main__":
     root = tk.Tk()
     app = TelemetryApp(root)
     root.protocol("WM_DELETE_WINDOW", on_exit)  # Asocia on_exit al evento de cierre de ventana
+    root.after(1000, app.update_server_status)  # Actualiza el estado del servidor cada 1000 ms (1 segundo)
     root.mainloop()
