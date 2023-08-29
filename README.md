@@ -31,8 +31,11 @@ pip install -r requirements.txt
 
 ## Run the application
 
+//client:
 python gui.py
 
+//server
+python serverSimulate.py
 # Usage
 
 Click the "Enviar por TCP" button to send a simulated TCP message to the server and receive a response.
